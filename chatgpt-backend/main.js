@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (OPENAI_API_KEY === undefined) {

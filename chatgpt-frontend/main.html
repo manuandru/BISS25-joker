@@ -173,6 +173,7 @@
     </div>
 
     <script>
+      const BASE_URL = "http://localhost:3000/api/v1";
       document.getElementById("jokeBtn").addEventListener("click", async () => {
         const jokeOutput = document.getElementById("jokeOutput");
 
@@ -182,13 +183,12 @@
         jokeOutput.classList.add("active");
 
         try {
-          const res = await fetch("/api/v1/translate", {
-            method: "POST",
+          const res = await fetch(`${BASE_URL}/joke`, {
+            method: "GET",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "joke" }),
           });
           const data = await res.json();
-          jokeOutput.innerText = data.message;
+          jokeOutput.innerText = data.joke;
         } catch (error) {
           jokeOutput.innerText =
             "Oops! Something went wrong. Please try again later.";
@@ -213,8 +213,8 @@
           translateOutput.classList.add("active");
 
           try {
-            const res = await fetch("/api/v1/joke", {
-              method: "GET",
+            const res = await fetch(`${BASE_URL}/translate/${lang}`, {
+              method: "POST",
               headers: { "Content-Type": "application/json" },
             });
             const data = await res.json();
