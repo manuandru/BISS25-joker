@@ -1,6 +1,9 @@
+require('dotenv').config();
+const baseUrl = process.env.BASE_CHATGPT_URL
+const token = process.env.TELEGRAM_API_TOKEN;
+
 const axios = require('axios');
 const TelegramBot = require('node-telegram-bot-api');
-const token = 'INSERISCI_IL_TUO_TOKEN_DEL_BOT';
 const bot = new TelegramBot(token, { polling: true });
 
 bot.onText(/\/help/, (msg) => {
@@ -19,12 +22,11 @@ bot.onText(/\/joke/, async (msg) => {
   const chatId = msg.chat.id;
 
   try {
-    const response = await axios.post('http://localhost:3001/gpt', {
-      type: 'joke'
-    });
-    bot.sendMessage(chatId, response.data.message);
+    const response = await axios.get(`${baseUrl}/joke`);
+    bot.sendMessage(chatId, response.data.joke);
   } catch (error) {
-    bot.sendMessage(chatId, 'Errore nel recupero della barzelletta.');
+    console.log(error)
+    bot.sendMessage(chatId, "Error in joke retrieval");
   }
 });
 
@@ -34,26 +36,9 @@ bot.onText(/\/translate (\w+)\s+(.+)/, async (msg, match) => {
   const text = match[2];
 
   try {
-    const response = await axios.post('http://localhost:3001/gpt', {
-      type: 'translate',
-      lang: lang,
-      text: text
-    });
-    bot.sendMessage(chatId, response.data.message);
+    const response = await axios.post(`${baseUrl}/translate/${lang}/`, { text });
+    bot.sendMessage(chatId, response.data.translation);
   } catch (error) {
-    bot.sendMessage(chatId, 'Errore nella traduzione.');
+    bot.sendMessage(chatId, "Error in translation");
   }
 });
-
-bot.on('message', (msg) => {
-  const chatId = msg.chat.id;
-  const text = msg.text.toLowerCase();
-
-  if (text.includes("hello world")) {
-    bot.sendMessage(chatId, "👋 Hello to you too!");
-  }
-});
-
-async function fakeTranslate(text, lang) {
-  return `[${lang}] ${text}`; 
-}
