@@ -4,13 +4,11 @@ const axios = require('axios');
 
 jest.mock('axios');
 
-// Import the main app logic, but since the app is created in main.js and listens immediately,
-// we need to re-create the endpoints here for isolated testing.
+// Minimal test app to match your new API
 function createTestApp() {
     const app = express();
     app.use(express.json());
 
-    // Mocked chatGPTRequest function
     async function chatGPTRequest(prompt) {
         try {
             const response = await axios.post();
@@ -20,13 +18,9 @@ function createTestApp() {
         }
     }
 
-    app.post('/api/v1/joke', async (req, res) => {
-        const { text } = req.body;
-        if (!text) {
-            return res.status(400).json({ error: 'Missing text parameter' });
-        }
+    app.get('/api/v1/joke', async (req, res) => {
         try {
-            const prompt = `Generate a joke based on the following text: "${text}"`;
+            const prompt = `Generate a funny joke. Be creative, humorous and concise."`;
             const joke = await chatGPTRequest(prompt);
             res.json({ joke });
         } catch (error) {
@@ -34,13 +28,14 @@ function createTestApp() {
         }
     });
 
-    app.post('/api/v1/translate', async (req, res) => {
-        const { text, targetLanguage } = req.body;
-        if (!text || !targetLanguage) {
-            return res.status(400).json({ error: 'Missing text or targetLanguage parameter' });
+    app.post('/api/v1/translate/:targetLanguage', async (req, res) => {
+        const { targetLanguage } = req.params;
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ error: 'Missing text parameter' });
         }
         try {
-            const prompt = `Translate the following text to ${targetLanguage}: "${text}"`;
+            const prompt = `Translate the following text to ${targetLanguage}. Output only the traduction: "${text}"`;
             const translation = await chatGPTRequest(prompt);
             res.json({ translation });
         } catch (error) {
@@ -59,8 +54,8 @@ describe('API endpoints', () => {
         jest.clearAllMocks();
     });
 
-    describe('POST /api/v1/joke', () => {
-        it('should return a joke when text is provided', async () => {
+    describe('GET /api/v1/joke', () => {
+        it('should return a joke', async () => {
             axios.post.mockResolvedValue({
                 data: {
                     choices: [
@@ -69,32 +64,22 @@ describe('API endpoints', () => {
                 }
             });
             const res = await request(app)
-                .post('/api/v1/joke')
-                .send({ text: 'banana' });
+                .get('/api/v1/joke');
             expect(res.statusCode).toBe(200);
             expect(res.body.joke).toBe('This is a joke.');
-        });
-
-        it('should return 400 if text is missing', async () => {
-            const res = await request(app)
-                .post('/api/v1/joke')
-                .send({});
-            expect(res.statusCode).toBe(400);
-            expect(res.body.error).toBe('Missing text parameter');
         });
 
         it('should return 500 if OpenAI API fails', async () => {
             axios.post.mockRejectedValue(new Error('API error'));
             const res = await request(app)
-                .post('/api/v1/joke')
-                .send({ text: 'apple' });
+                .get('/api/v1/joke');
             expect(res.statusCode).toBe(500);
             expect(res.body.error).toBe('Failed to generate joke');
         });
     });
 
-    describe('POST /api/v1/translate', () => {
-        it('should return a translation when text and targetLanguage are provided', async () => {
+    describe('POST /api/v1/translate/:targetLanguage', () => {
+        it('should return a translation when text is provided', async () => {
             axios.post.mockResolvedValue({
                 data: {
                     choices: [
@@ -103,33 +88,25 @@ describe('API endpoints', () => {
                 }
             });
             const res = await request(app)
-                .post('/api/v1/translate')
-                .send({ text: 'Hello world', targetLanguage: 'Spanish' });
+                .post('/api/v1/translate/Spanish')
+                .send({ text: 'Hello world' });
             expect(res.statusCode).toBe(200);
             expect(res.body.translation).toBe('Hola mundo');
         });
 
         it('should return 400 if text is missing', async () => {
             const res = await request(app)
-                .post('/api/v1/translate')
-                .send({ targetLanguage: 'French' });
+                .post('/api/v1/translate/French')
+                .send({});
             expect(res.statusCode).toBe(400);
-            expect(res.body.error).toBe('Missing text or targetLanguage parameter');
-        });
-
-        it('should return 400 if targetLanguage is missing', async () => {
-            const res = await request(app)
-                .post('/api/v1/translate')
-                .send({ text: 'Hello' });
-            expect(res.statusCode).toBe(400);
-            expect(res.body.error).toBe('Missing text or targetLanguage parameter');
+            expect(res.body.error).toBe('Missing text parameter');
         });
 
         it('should return 500 if OpenAI API fails', async () => {
             axios.post.mockRejectedValue(new Error('API error'));
             const res = await request(app)
-                .post('/api/v1/translate')
-                .send({ text: 'Hello', targetLanguage: 'German' });
+                .post('/api/v1/translate/German')
+                .send({ text: 'Hello' });
             expect(res.statusCode).toBe(500);
             expect(res.body.error).toBe('Failed to generate translation');
         });

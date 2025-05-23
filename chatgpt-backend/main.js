@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 
@@ -32,14 +33,9 @@ async function chatGPTRequest(prompt) {
     }
 }
 
-app.post('/api/v1/joke', async (req, res) => {
-    const { text } = req.body;
-    if (!text) {
-        return res.status(400).json({ error: 'Missing text parameter' });
-    }
-
+app.get('/api/v1/joke', async (req, res) => {
     try {
-        const prompt = `Generate a joke based on the following text: "${text}"`;
+        const prompt = `Generate a funny joke. Be creative, humorous and concise."`;
         const joke = await chatGPTRequest(prompt);
         res.json({ joke });
     } catch (error) {
@@ -47,14 +43,15 @@ app.post('/api/v1/joke', async (req, res) => {
     }
 });
 
-app.post('/api/v1/translate', async (req, res) => {
-    const { text, targetLanguage } = req.body;
-    if (!text || !targetLanguage) {
-        return res.status(400).json({ error: 'Missing text or targetLanguage parameter' });
+app.post('/api/v1/translate/:targetLanguage', async (req, res) => {
+    const { targetLanguage } = req.params;
+    const { text } = req.body;
+    if (!text) {
+        return res.status(400).json({ error: 'Missing text parameter' });
     }
 
     try {
-        const prompt = `Translate the following text to ${targetLanguage}: "${text}"`;
+        const prompt = `Translate the following text to ${targetLanguage}. Output only the traduction: "${text}"`;
         const translation = await chatGPTRequest(prompt);
         res.json({ translation });
     } catch (error) {
