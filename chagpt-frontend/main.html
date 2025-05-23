@@ -136,7 +136,7 @@
       jokeOutput.classList.add('active');
       
       try {
-        const res = await fetch('http://localhost:3001/gpt', {
+        const res = await fetch('/api/v1/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: 'joke' })
@@ -163,10 +163,9 @@
       translateOutput.classList.add('active');
       
       try {
-        const res = await fetch('http://localhost:3001/gpt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'translate', text: text, lang: lang })
+        const res = await fetch('/api/v1/joke', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         });
         const data = await res.json();
         translateOutput.innerText = data.message;
