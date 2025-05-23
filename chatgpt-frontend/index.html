@@ -216,9 +216,10 @@
             const res = await fetch(`${BASE_URL}/translate/${lang}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text }),
             });
             const data = await res.json();
-            translateOutput.innerText = data.message;
+            translateOutput.innerText = data.translation;
           } catch (error) {
             translateOutput.innerText =
               "Oops! Something went wrong. Please try again later.";
