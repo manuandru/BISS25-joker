@@ -13,13 +13,16 @@ if (OPENAI_API_KEY === undefined) {
     process.exit(1);
 }
 
-async function chatGPTRequest(prompt) {
+async function chatGPTRequest(system_prompt, user_prompt) {
     try {
         const response = await axios.post(
             'https://api.openai.com/v1/chat/completions',
             {
                 model: 'gpt-4.1',
-                messages: [{ role: 'user', content: prompt }],
+                messages: [
+                    { role: 'system', content: system_prompt },
+                    { role: 'user', content: user_prompt }
+                ],
             },
             {
                 headers: {
@@ -37,8 +40,9 @@ async function chatGPTRequest(prompt) {
 
 app.get('/api/v1/joke', async (req, res) => {
     try {
-        const prompt = `Generate a funny joke. Be creative, humorous and concise."`;
-        const joke = await chatGPTRequest(prompt);
+        const system_prompt = 'You are a very funny comedian.';
+        const user_prompt = `Generate a funny joke. Be creative, humorous and concise.`;
+        const joke = await chatGPTRequest(system_prompt, user_prompt);
         res.json({ joke });
     } catch (error) {
         res.status(500).json({ error: 'Failed to generate joke' });
@@ -53,8 +57,9 @@ app.post('/api/v1/translate/:targetLanguage', async (req, res) => {
     }
 
     try {
-        const prompt = `Translate the following text to ${targetLanguage}. Output only the traduction: "${text}"`;
-        const translation = await chatGPTRequest(prompt);
+        const system_prompt = `You are a very competent translator. Translate the text to ${targetLanguage}.`;
+        const user_prompt = `Translate the following text to ${targetLanguage}. Output only the translation: "${text}"`;
+        const translation = await chatGPTRequest(system_prompt, user_prompt);
         res.json({ translation });
     } catch (error) {
         res.status(500).json({ error: 'Failed to generate translation' });
